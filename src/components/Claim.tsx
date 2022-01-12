@@ -1,4 +1,4 @@
-import { Button } from '@mui/material';
+import { Box, Button, CircularProgress } from '@mui/material';
 import { Fee, MsgSend, MsgExecuteContract, Dec, Int } from '@terra-money/terra.js';
 import {
   CreateTxFailed,
@@ -18,6 +18,7 @@ export function Claim() {
   const [txResult, setTxResult] = useState<TxResult | null>(null);
   const [txError, setTxError] = useState<string | null>(null);
   const [payout, setPayout] = useState(0);
+  const [loading, setLoading]= useState(false);
 
   const connectedWallet = useConnectedWallet();
 
@@ -56,13 +57,9 @@ export function Claim() {
     }
     
     let chainID = connectedWallet.network.chainID;
-    if (chainID.startsWith('columbus')) {
-      alert(`Please only execute this example on Testnet`);
-      return;
-    }
 
 
-
+    setLoading(true);
     setTxResult(null);
     setTxError(null);
     
@@ -86,10 +83,12 @@ export function Claim() {
       })
       .then((nextTxResult: TxResult) => {
         console.log(nextTxResult);
-        setTxResult(nextTxResult);
+        setLoading(false);
+        // setTxResult(nextTxResult);
 
       })
       .catch((error: unknown) => {
+        setLoading(false);
         if (error instanceof UserDenied) {
           setTxError('User Denied');
         } else if (error instanceof CreateTxFailed) {
@@ -118,12 +117,26 @@ export function Claim() {
 
       
 
-      {connectedWallet?.availablePost && !txResult && !txError && (
-        
-        <Button variant="contained" onClick={proceed}>Claim LUM</Button>
+      {connectedWallet?.availablePost && !txResult && (
+       <Box sx={{ m: 1, position: 'relative' }}>
+       <Button
+         variant="contained"
+         disabled={loading}
+         onClick={proceed}
+       >
+         Claim LUM
+       </Button>
+       {loading && (
+         <CircularProgress
+           size={24}
+           
+         />
+       )}
+     </Box> 
+        // <Button variant="contained" onClick={proceed}>Claim LUM</Button>
       )}
 
-      {txResult && (
+      {/* {txResult && (
         <>
           <pre>{JSON.stringify(txResult, null, 2)}</pre>
 
@@ -139,8 +152,8 @@ export function Claim() {
             </div>
           )}
         </>
-      )}
-
+      )} */}
+{/* 
       {txError && <pre>{txError}</pre>}
 
       {(!!txResult || !!txError) && (
@@ -152,7 +165,7 @@ export function Claim() {
         >
           Clear result
         </button>
-      )}
+      )} */}
 
       {!connectedWallet && <p>Wallet not connected!</p>}
 

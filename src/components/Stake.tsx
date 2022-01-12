@@ -1,4 +1,4 @@
-import { Button, FilledInput, FormControl, InputAdornment, InputLabel } from '@mui/material';
+import { Box, Button, CircularProgress, FilledInput, FormControl, InputAdornment, InputLabel } from '@mui/material';
 import { chainPropTypes } from '@mui/utils';
 import { Fee, MsgSend, MsgExecuteContract, Dec, Int } from '@terra-money/terra.js';
 import {
@@ -21,6 +21,7 @@ export function Stake() {
   const [stakeAmount, setStakeAmount] = useState('');
   const [lumBalance, setLumBalance] = useState(0);
   const [allowance, setAllowance] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const messages: MsgExecuteContract[] = [];
   const connectedWallet = useConnectedWallet();
@@ -96,11 +97,8 @@ export function Stake() {
     }
 
     let chainID = connectedWallet.network.chainID;
-    if (chainID.startsWith('columbus')) {
-      alert(`Please only execute this example on Testnet`);
-      return;
-    }
 
+    setLoading(true);
     setTxResult(null);
     setTxError(null);
 
@@ -149,10 +147,12 @@ export function Stake() {
       })
       .then((nextTxResult: TxResult) => {
         console.log(nextTxResult);
-        setTxResult(nextTxResult);
+        setLoading(false);
+        // setTxResult(nextTxResult);
 
       })
       .catch((error: unknown) => {
+        setLoading(false);
         if (error instanceof UserDenied) {
           setTxError('User Denied');
         } else if (error instanceof CreateTxFailed) {
@@ -186,12 +186,27 @@ export function Stake() {
           />
         </FormControl>
       
-      {connectedWallet?.availablePost && !txResult && !txError && (
+      {connectedWallet?.availablePost &&  (
+                      <Box sx={{ m: 1, position: 'relative' }}>
+                      <Button
+                        variant="contained"
+                        disabled={loading}
+                        onClick={proceed}
+                      >
+                        Stake
+                      </Button>
+                      {loading && (
+                        <CircularProgress
+                          size={24}
+                          
+                        />
+                      )}
+                    </Box>
         
-        <Button variant="contained" onClick={proceed}>Stake LUM</Button>
+        // <Button variant="contained" onClick={proceed}>Stake LUM</Button>
       )}
 
-      {txResult && (
+      {/* {txResult && (
         <>
           <pre>{JSON.stringify(txResult, null, 2)}</pre>
 
@@ -220,7 +235,7 @@ export function Stake() {
         >
           Clear result
         </button>
-      )}
+      )} */}
 
       {!connectedWallet && <p>Wallet not connected!</p>}
 

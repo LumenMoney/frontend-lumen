@@ -5,6 +5,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
+import { ConnectAndDisconnect } from './Connect';
 // import MenuIcon from '@mui/icons-material/Menu';
 
 export default function ButtonAppBar() {
@@ -23,7 +24,7 @@ export default function ButtonAppBar() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             LUMEN
           </Typography>
-          <Button color="inherit">Connected</Button>
+          <ConnectAndDisconnect/>
         </Toolbar>
       </AppBar>
   );

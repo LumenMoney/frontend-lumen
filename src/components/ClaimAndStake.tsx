@@ -1,4 +1,4 @@
-import { Button } from '@mui/material';
+import { Box, Button, CircularProgress } from '@mui/material';
 import { Fee, MsgSend, MsgExecuteContract, Dec, Int } from '@terra-money/terra.js';
 import {
   CreateTxFailed,
@@ -19,6 +19,7 @@ export function ClaimAndStake() {
   const [txError, setTxError] = useState<string | null>(null);
   const [allowance, setAllowance] = useState('');
   const messages: MsgExecuteContract[] = []; 
+  const [loading, setLoading] = useState(false);
 
   const connectedWallet = useConnectedWallet();
 
@@ -73,12 +74,9 @@ export function ClaimAndStake() {
 
 
     let chainID = connectedWallet.network.chainID;
-    if (chainID.startsWith('columbus')) {
-      alert(`Please only execute this example on Testnet`);
-      return;
-    }
 
 
+    setLoading(true);
     setTxResult(null);
     setTxError(null);
 
@@ -123,10 +121,12 @@ export function ClaimAndStake() {
       })
       .then((nextTxResult: TxResult) => {
         console.log(nextTxResult);
-        setTxResult(nextTxResult);
+        setLoading(false);
+        // setTxResult(nextTxResult);
 
       })
       .catch((error: unknown) => {
+        setLoading(false);
         if (error instanceof UserDenied) {
           setTxError('User Denied');
         } else if (error instanceof CreateTxFailed) {
@@ -152,11 +152,26 @@ export function ClaimAndStake() {
 
       
 
-      {connectedWallet?.availablePost && !txResult && !txError && (
+      {connectedWallet?.availablePost &&  (
+               <Box sx={{ m: 1, position: 'relative' }}>
+               <Button
+                 variant="contained"
+                 disabled={loading}
+                 onClick={proceed}
+               >
+                 Claim LUM and Stake
+               </Button>
+               {loading && (
+                 <CircularProgress
+                   size={24}
+                   
+                 />
+               )}
+             </Box> 
         
-        <Button variant="contained" onClick={proceed}>Claim LUM and Stake</Button>
+        // <Button variant="contained" onClick={proceed}>Claim LUM and Stake</Button>
       )}
-
+{/* 
       {txResult && (
         <>
           <pre>{JSON.stringify(txResult, null, 2)}</pre>
@@ -186,7 +201,7 @@ export function ClaimAndStake() {
         >
           Clear result
         </button>
-      )}
+      )} */}
 
       {!connectedWallet && <p>Wallet not connected!</p>}
 
@@ -194,10 +209,7 @@ export function ClaimAndStake() {
         <p>This connection does not support post()</p>
       )}
 <br/>
-<h3>Todos</h3> 
-        <ul>
-          <li>Before auto stake we need to ask for allowance increase</li>
-        </ul>
+
     </div>
     
   );

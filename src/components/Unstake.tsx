@@ -1,4 +1,4 @@
-import { FormControl, InputLabel, FilledInput, InputAdornment, Button } from '@mui/material';
+import { FormControl, InputLabel, FilledInput, InputAdornment, Button, Box, CircularProgress } from '@mui/material';
 import { Fee, MsgSend, MsgExecuteContract, Dec, Int } from '@terra-money/terra.js';
 import {
   CreateTxFailed,
@@ -19,6 +19,7 @@ export function Unstake() {
   const [txError, setTxError] = useState<string | null>(null);
   const [unstakeAmount, setUnstakeAmount] = useState('');
   const [slumBalance, setSlumBalance] = useState(0);
+  const [loading, setLoading] = useState(false);
 
 
   const connectedWallet = useConnectedWallet();
@@ -82,11 +83,8 @@ export function Unstake() {
     }
 
     let chainID = connectedWallet.network.chainID;
-    if (chainID.startsWith('columbus')) {
-      alert(`Please only execute this example on Testnet`);
-      return;
-    }
 
+    setLoading(true);
     setTxResult(null);
     setTxError(null);
 
@@ -130,10 +128,12 @@ export function Unstake() {
       })
       .then((nextTxResult: TxResult) => {
         console.log(nextTxResult);
-        setTxResult(nextTxResult);
+        setLoading(false);
+        // setTxResult(nextTxResult);
 
       })
       .catch((error: unknown) => {
+        setLoading(false);
         if (error instanceof UserDenied) {
           setTxError('User Denied');
         } else if (error instanceof CreateTxFailed) {
@@ -168,12 +168,26 @@ export function Unstake() {
           />
         </FormControl> 
 
-      {connectedWallet?.availablePost && !txResult && !txError && (
-        
-        <Button variant="contained" onClick={proceed}>Unstake LUM</Button>
+      {connectedWallet?.availablePost && (
+                      <Box sx={{ m: 1, position: 'relative' }}>
+                      <Button
+                        variant="contained"
+                        disabled={loading}
+                        onClick={proceed}
+                      >
+                        Unstake
+                      </Button>
+                      {loading && (
+                        <CircularProgress
+                          size={24}
+                          
+                        />
+                      )}
+                    </Box>
+        // <Button variant="contained" onClick={proceed}>Unstake LUM</Button>
       )}
 
-      {txResult && (
+      {/* {txResult && (
         <>
           <pre>{JSON.stringify(txResult, null, 2)}</pre>
 
@@ -202,7 +216,7 @@ export function Unstake() {
         >
           Clear result
         </button>
-      )}
+      )} */}
 
       {!connectedWallet && <p>Wallet not connected!</p>}
 

@@ -8,6 +8,7 @@ import {
   TxResult,
   TxUnspecifiedError,
   useConnectedWallet,
+  useLCDClient,
   UserDenied,
 } from '@terra-money/wallet-provider';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -34,7 +35,21 @@ export function BuyBond() {
   });
   const { vertical, horizontal, open } = state;
 
+  const lcd = useLCDClient();
   const connectedWallet = useConnectedWallet();
+
+  const [bank, setBank] = useState<null | string>();
+
+  useEffect(() => {
+    if (connectedWallet) {
+      lcd.bank.balance(connectedWallet.walletAddress).then(([coins]) => {
+        // setBank(coins.toString());
+        setBank(coins.filter(element => element.denom === "uusd").div(Math.pow(10,6)).toString())
+      });
+    } else {
+      setBank(null);
+    }
+  }, [connectedWallet, lcd]);
 
   /**
    * Slider
@@ -205,6 +220,9 @@ export function BuyBond() {
         marks={marks}
       /> */}
 
+    {connectedWallet?.availablePost && (
+      <h4>Your UST balance is: {bank? bank.split('u')[0] : 0}</h4>
+    )}
 
       {connectedWallet?.availablePost && (
               <Box sx={{ m: 1, position: 'relative' }}>

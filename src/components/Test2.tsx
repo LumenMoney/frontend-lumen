@@ -1,3 +1,5 @@
+import { Button, FilledInput, FormControl, InputAdornment, InputLabel } from '@mui/material';
+import { chainPropTypes } from '@mui/utils';
 import { Fee, MsgSend, MsgExecuteContract, Dec, Int } from '@terra-money/terra.js';
 import {
   CreateTxFailed,
@@ -9,18 +11,27 @@ import {
   UserDenied,
 } from '@terra-money/wallet-provider';
 import React, { useCallback, useEffect, useState } from 'react';
-import { addresses, wallet, terra, largeApproval } from '../constants';
+import { addresses, wallet, terra } from '../constants';
 
 const TEST_TO_ADDRESS = 'terra12hnhh5vtyg5juqnzm43970nh4fw42pt27nw9g9';
 
-export function  ManualStake() {
+export function Test2() {
   const [txResult, setTxResult] = useState<TxResult | null>(null);
   const [txError, setTxError] = useState<string | null>(null);
-  const [allowance, setAllowance] = useState('');
-
-  const connectedWallet = useConnectedWallet();
+  const [stakeAmount, setStakeAmount] = useState('');
+  const [lumBalance, setLumBalance] = useState(0);
 
   const messages: MsgExecuteContract[] = [];
+  const connectedWallet = useConnectedWallet();
+
+  /**
+   * Handles change in amount input
+   * @param e 
+   */
+     const handleChangeAmount = (e: React.ChangeEvent<HTMLInputElement>): void => {
+      setStakeAmount(e.target.value)
+      console.log(stakeAmount)
+  };
 
   const getAllowance = useCallback(async () => {
     if (!connectedWallet) {
@@ -40,10 +51,37 @@ export function  ManualStake() {
   }, [connectedWallet]);
 
   useEffect(() => {
+    let chainID = connectedWallet ? connectedWallet.network.chainID : "terra";
     getAllowance()
     .then((result: any) => {
       console.log(result)
-      setAllowance(result.allowance);
+    })
+    .catch((error: any) => {
+      console.log(error)
+    })
+  },[connectedWallet]);
+
+  const getLumBalance = useCallback(async () => {
+    if (!connectedWallet) {
+      return;
+    }
+
+    let chainID = connectedWallet.network.chainID;
+    const result = await terra.wasm.contractQuery(
+      addresses[chainID].TREASURY_ADDRESS,
+      { "balance": { 
+            "address": connectedWallet.walletAddress,  
+      } } // query msg
+    );
+    return result
+
+  }, [connectedWallet]);
+
+  useEffect(() => {
+    getLumBalance()
+    .then((result: any) => {
+      console.log(result)
+      setLumBalance(result.balance)
     })
     .catch((error: any) => {
       console.log(error)
@@ -65,43 +103,29 @@ export function  ManualStake() {
     setTxResult(null);
     setTxError(null);
 
-    messages.splice(0, messages.length)
+    messages.push();
 
-    if (parseInt(allowance) == 0) {
-        
-      messages.push(
-        new MsgExecuteContract(
-          connectedWallet.walletAddress, 
-          addresses[chainID].TREASURY_ADDRESS, 
-          {"increase_allowance": 
-            {
-              spender: addresses[chainID].STAKING_ADDRESS,
-              amount: largeApproval
-              
-            }
-        },
-        )
-      )
-    }
-
-   messages.push(new MsgExecuteContract(
-      connectedWallet.walletAddress, 
-      addresses[chainID].STAKING_ADDRESS, 
-      {"stake": 
-        {
-          owner: connectedWallet.walletAddress,
-          recipient: addresses[chainID].STAKING_ADDRESS,
-          amount: 40
-          
-        }
-    },
-    ))
-    
+    let currTime = new Date().getTime() / 1000;
+    let start = Math.round(currTime) + 100;
+    let end =  Math.round(currTime) + 100000;
 
     connectedWallet
       .post({
-        fee: new Fee(1000000, '2000000uusd'),
-        msgs: messages
+        // fee: new Fee(1000000, '2000000uusd'),
+        fee: undefined,
+        msgs: [
+          new MsgExecuteContract(
+            connectedWallet.walletAddress,
+            "terra10w3m3hagg857s3uylw5yw55ztd6snl5r8jylzr", //LBP Factory
+            {
+              "distribute": {
+              
+              }
+            }
+          ),
+
+
+        ]
       })
       .then((nextTxResult: TxResult) => {
         console.log(nextTxResult);
@@ -126,17 +150,24 @@ export function  ManualStake() {
           );
         }
       });
-  }, [allowance, connectedWallet]);
+  }, [stakeAmount, connectedWallet]);
 
   return (
     <div>
-      <h1>Manual Stake</h1>
-
+        <h3>Your LUM balance is:   {(lumBalance/ Math.pow(10,9)).toFixed(2)}</h3>
+        <FormControl fullWidth sx={{ m: 1 }} variant="filled">
+          <InputLabel htmlFor="filled-adornment-amount-redeem">Amount</InputLabel>
+          <FilledInput
+            id="filled-adornment-amount-redeem"
+            value={stakeAmount}
+            onChange={handleChangeAmount}
+            startAdornment={<InputAdornment position="start">$</InputAdornment>}
+          />
+        </FormControl>
       
-
       {connectedWallet?.availablePost && !txResult && !txError && (
         
-        <button onClick={proceed}>Manual Stake</button>
+        <Button variant="contained" onClick={proceed}>Stake LUM</Button>
       )}
 
       {txResult && (

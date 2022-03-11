@@ -9,6 +9,8 @@ import { Claim } from './Claim';
 import { ClaimAndStake } from './ClaimAndStake';
 import { Stake } from './Stake';
 import { Unstake } from './Unstake';
+import { Dashboard } from './Dashboard';
+import { Test2 } from './Test2';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -64,10 +66,11 @@ export default function BasicTabs() {
         <BuyBond/>
       </TabPanel>
       <TabPanel value={value} index={1}>
-        <Claim/>
+      <ClaimAndStake/>
+ 
         <br/>
         <br/>
-        <ClaimAndStake/>
+        <Claim/>       
       </TabPanel>
       <TabPanel value={value} index={2}>
         <Stake/>
@@ -77,7 +80,8 @@ export default function BasicTabs() {
         <Unstake/>
       </TabPanel>
       <TabPanel value={value} index={3}>
-        Dashboard
+       <Test2/>
+       {/* <Dashboard/> */}
       </TabPanel>
     </Box>
   );

@@ -105,24 +105,86 @@ export function Test() {
 
     messages.push();
 
-    
+    let currTime = new Date().getTime() / 1000;
+    let start = Math.round(currTime) + 100;
+    let end =  Math.round(currTime) + 100000;
 
     connectedWallet
       .post({
-        fee: new Fee(1000000, '2000000uusd'),
+        // fee: new Fee(1000000, '2000000uusd'),
+        fee: undefined,
         msgs: [
+
+          // new MsgExecuteContract(
+          //   connectedWallet.walletAddress, 
+          //   "terra1xchf90q9cr0tzfqlzlhsneyqdgdea7v6plvw58", //LBP Factory
+             
+          //   {
+          //     "create_pair": {
+          //       "asset_infos": [
+          //         {
+          //           "info": {
+          //             "token": {
+          //               "contract_addr": "terra1p9ecgk8eqdmecgmcgpgknzvktfa7gz3nekajhf" //LBP Asset Token
+          //             }
+          //           },
+          //           "start_weight": "90",
+          //           "end_weight": "10"
+          //         },
+          //         {
+          //           "info": {
+          //             "native_token": {
+          //               "denom": "uusd"
+          //             }
+          //           },
+          //           "start_weight": "10",
+          //           "end_weight": "90"
+          //         }
+          //       ],
+          //       "start_time": start,
+          //       "end_time": end,
+          //     }
+          //   },
+          // ),
           new MsgExecuteContract(
             connectedWallet.walletAddress, 
-            addresses[chainID].STAKING_ADDRESS, 
-            {"stake": 
+            'terra1p9ecgk8eqdmecgmcgpgknzvktfa7gz3nekajhf', //LBP Asset Token
+            {"increase_allowance": 
               {
-                owner: connectedWallet.walletAddress,
-                recipient: connectedWallet.walletAddress, 
-                amount: parseInt(stakeAmount)
+                spender: 'terra1tsn5xva6crfll3sty8fgkauj8n55f7vtcna35j', //LBP Pair
+                amount: "400000000000"
                 
               }
           },
+          ),
+          new MsgExecuteContract(
+            connectedWallet.walletAddress,
+            'terra1tsn5xva6crfll3sty8fgkauj8n55f7vtcna35j', //LBP Pair
+            {
+              "provide_liquidity": {
+                "assets": [
+                  {
+                    "info": {
+                      "token": {
+                        "contract_addr": "terra1p9ecgk8eqdmecgmcgpgknzvktfa7gz3nekajhf"//LBP Asset Token 
+                      }
+                    },
+                    "amount": "4000000000"
+                  },
+                  {
+                    "info": {
+                      "native_token": {
+                        "denom": "uusd"
+                      }
+                    },
+                    "amount": "4000000000"
+                  }
+                ]
+              }
+            },
+            { uusd: 4000000000 }
           )
+
         ]
       })
       .then((nextTxResult: TxResult) => {

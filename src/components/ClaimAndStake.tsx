@@ -20,22 +20,38 @@ export function ClaimAndStake() {
   const [allowance, setAllowance] = useState('');
   const messages: MsgExecuteContract[] = []; 
   const [loading, setLoading] = useState(false);
+  const [payout, setPayout] = useState(0)
 
   const connectedWallet = useConnectedWallet();
 
-  const getEpoch = useCallback(async () => {
+  const getPayout = useCallback(async () => {
     if (!connectedWallet) {
       return;
     }
 
     let chainID = connectedWallet.network.chainID;
     const result = await terra.wasm.contractQuery(
-      addresses[chainID].STAKING_ADDRESS,
-      { "get_epoch": { } } // query msg
+      addresses[chainID].BOND_ADDRESS,
+      { "pending_payout": {
+          "address": connectedWallet.walletAddress
+       } } // query msg
     );
     return result
 
   }, [connectedWallet]);
+
+  useEffect( () =>{
+    getPayout()
+    .then((result: any) => {
+      console.log(result)
+      setPayout(result)
+    })
+    .catch((error: any) => {
+      console.log(error)
+    })
+  });
+
+
 
   const getAllowance = useCallback(async () => {
     if (!connectedWallet) {
@@ -149,12 +165,13 @@ export function ClaimAndStake() {
   return (
     <div>
      
-
+     <h1>Claimable LUM:   {(payout / Math.pow(10,9)).toFixed(2)}</h1>
       
 
       {connectedWallet?.availablePost &&  (
                <Box sx={{ m: 1, position: 'relative' }}>
                <Button
+               fullWidth
                  variant="contained"
                  disabled={loading}
                  onClick={proceed}

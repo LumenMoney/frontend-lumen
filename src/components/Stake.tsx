@@ -114,7 +114,7 @@ export function Stake() {
              {
               
                spender: addresses[chainID].STAKING_ADDRESS,
-               value: largeApproval
+               amount: largeApproval
                
              }
          },
@@ -142,7 +142,7 @@ export function Stake() {
 
     connectedWallet
       .post({
-        fee: new Fee(1000000, '2000000uusd'),
+        fee: undefined,
         msgs: messages
       })
       .then((nextTxResult: TxResult) => {
@@ -206,7 +206,7 @@ export function Stake() {
         // <Button variant="contained" onClick={proceed}>Stake LUM</Button>
       )}
 
-      {/* {txResult && (
+      {txResult && (
         <>
           <pre>{JSON.stringify(txResult, null, 2)}</pre>
 
@@ -235,7 +235,7 @@ export function Stake() {
         >
           Clear result
         </button>
-      )} */}
+      )}
 
       {!connectedWallet && <p>Wallet not connected!</p>}
 

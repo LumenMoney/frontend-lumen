@@ -17,37 +17,12 @@ const TEST_TO_ADDRESS = 'terra12hnhh5vtyg5juqnzm43970nh4fw42pt27nw9g9';
 export function Claim() {
   const [txResult, setTxResult] = useState<TxResult | null>(null);
   const [txError, setTxError] = useState<string | null>(null);
-  const [payout, setPayout] = useState(0);
+  // const [payout, setPayout] = useState(0);
   const [loading, setLoading]= useState(false);
 
   const connectedWallet = useConnectedWallet();
 
-  const getPayout = useCallback(async () => {
-    if (!connectedWallet) {
-      return;
-    }
 
-    let chainID = connectedWallet.network.chainID;
-    const result = await terra.wasm.contractQuery(
-      addresses[chainID].BOND_ADDRESS,
-      { "pending_payout": {
-          "address": connectedWallet.walletAddress
-       } } // query msg
-    );
-    return result
-
-  }, [connectedWallet]);
-
-  useEffect( () =>{
-    getPayout()
-    .then((result: any) => {
-      console.log(result)
-      setPayout(result)
-    })
-    .catch((error: any) => {
-      console.log(error)
-    })
-  });
 
 
 
@@ -113,13 +88,15 @@ export function Claim() {
 
 
 
-      <h1>Claimable LUM:   {(payout / Math.pow(10,9)).toFixed(2)}</h1>
+     
 
       
 
       {connectedWallet?.availablePost && !txResult && (
        <Box sx={{ m: 1, position: 'relative' }}>
+
        <Button
+       fullWidth
          variant="contained"
          disabled={loading}
          onClick={proceed}

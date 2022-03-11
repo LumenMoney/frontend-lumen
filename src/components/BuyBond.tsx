@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, FilledInput, FormControl, Grid, InputAdornment, InputLabel, Slider, Snackbar, SnackbarOrigin } from '@mui/material';
+import { Box, Button, Card, CardContent, CircularProgress, FilledInput, FormControl, Grid, InputAdornment, InputLabel, Slider, Snackbar, SnackbarOrigin, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import { green } from '@mui/material/colors';
 import { Fee, MsgSend, MsgExecuteContract, Dec, Int } from '@terra-money/terra.js';
 import {
@@ -27,6 +27,7 @@ export function BuyBond() {
   const [marketPrice, setMarketPrice] = useState(600);
   const [loading, setLoading] = useState(false);
   const [snackMessage, setSnackMessage] = useState('');
+  const [maxPayout, setMaxPayout] = useState(0);
 
   const [state, setState] = React.useState<State>({
     open: false,
@@ -44,7 +45,7 @@ export function BuyBond() {
     if (connectedWallet) {
       lcd.bank.balance(connectedWallet.walletAddress).then(([coins]) => {
         // setBank(coins.toString());
-        setBank(coins.filter(element => element.denom === "uusd").div(Math.pow(10,6)).toString())
+        setBank(coins.filter(element => element.denom === "uusd").div(Math.pow(10,6)).toString().split('u')[0])
       });
     } else {
       setBank(null);
@@ -91,13 +92,24 @@ export function BuyBond() {
       setAmount(e.target.value)
   };
 
+const  handleMax = useCallback( () => {
+  if(!bank){return}
+  let balance = parseInt(bank);
+  let maxUserCanBuy = balance / bondPrice;
+  if (maxUserCanBuy > maxPayout) {
+    maxUserCanBuy = maxPayout
+  }
+  setAmount((maxUserCanBuy*bondPrice).toString())
+}, [bank, bondPrice, maxPayout])
+
   //TO BE SEPERATED
   const getBondPriceUSD = useCallback(async () => {
     if (!connectedWallet) {
       return;
     }
-
+    
     let chainID = connectedWallet.network.chainID;
+    console.log(chainID);
     const result = await terra.wasm.contractQuery(
       addresses[chainID].BOND_ADDRESS,
       { "bond_price_in_usd": { } } // query msg
@@ -105,6 +117,34 @@ export function BuyBond() {
     return result
 
   }, [connectedWallet]);
+
+  const getMaxPayout = useCallback(async () => {
+    if (!connectedWallet) {
+      return;
+    }
+
+    let chainID = connectedWallet.network.chainID;
+    const result = await terra.wasm.contractQuery(
+      addresses[chainID].BOND_ADDRESS,
+      { "max_payout": { 
+        "addr": addresses[chainID].TREASURY_ADDRESS,
+        "max_pay": 50
+      } } // query msg
+    );
+    return result
+
+  }, [connectedWallet]);
+
+  useEffect(() => {
+    getMaxPayout()
+    .then((result: any) => {
+      setMaxPayout(result / Math.pow(10, 9))
+      console.log(result)
+    })
+    .catch((error: any) => {
+      console.log(error)
+    })
+  });
 
   useEffect(() => {
     getBondPriceUSD()
@@ -118,7 +158,7 @@ export function BuyBond() {
   });
 
   const proceed = useCallback(() => {
-    if (!connectedWallet) {
+    if (!connectedWallet || !amount) {
       return;
     }
 
@@ -131,7 +171,7 @@ export function BuyBond() {
 
     connectedWallet
       .post({
-        fee: new Fee(1000000, '2000000uusd'),
+        fee: undefined,
         msgs: [
           new MsgExecuteContract(
             connectedWallet.walletAddress, 
@@ -178,22 +218,64 @@ export function BuyBond() {
 
   return (
     <div>
-        <br/>
-        <br />
-        <Grid container spacing={2}>
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{fontSize: 16}} >Bond</TableCell>
+              <TableCell sx={{fontSize: 16}} align={"right"}>Saving</TableCell>
+              <TableCell  sx={{fontSize: 16}} align={"right"}>Price</TableCell>
+              <TableCell sx={{fontSize: 16}} align={"right"}>Market Price</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow >
+              <TableCell sx={{fontSize: 24}} >UST</TableCell>
+              <TableCell sx={{fontSize: 24}} align={"right"}>{(100 - (bondPrice * 100 / marketPrice)).toFixed(2)}%</TableCell>
+              <TableCell sx={{fontSize: 24}} align={"right"}> ${bondPrice}</TableCell>
+              <TableCell sx={{fontSize: 24}} align={"right"}> ${marketPrice}</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableContainer>
+<br />
+        {/* <Grid container spacing={2}>
           <Grid item={true} xs ={4}> <h2> Bond Price:    ${bondPrice}</h2></Grid>
           <Grid item={true} xs ={4}><h2> Market Price:    ${marketPrice}</h2></Grid>
           <Grid item={true} xs ={4}> <h2> SAVINGS:    {(100 - (bondPrice * 100 / marketPrice)).toFixed(2)}%</h2></Grid>
-        </Grid>
+        </Grid> */}
 
-        <br/>
-        <br /> 
-       
-       <Grid container spacing={2} >
+   
+       <Grid container spacing={2}>
          <Grid item={true} xs={6}>
+           <Card>
+             <CardContent>
+             <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+              Your UST Balance
+             </Typography>
+               <Typography variant="h5" component="div">{bank ? bank : 0}</Typography>
+             </CardContent>
+            </Card>
+          </Grid>
+          <Grid item={true} xs={6}>
+           <Card>
+             <CardContent>
+             <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+                You are buying
+            </Typography>
+               <Typography variant="h5" component="div">{amount ? parseFloat(amount) / bondPrice : 0} LUM</Typography>
+             </CardContent>
+            </Card>
+          </Grid>
+       </Grid>    
+       
+       <br />
+       <Grid container spacing={2} >
+         <Grid item={true} xs={10}>
          <FormControl fullWidth sx={{ m: 1 }} variant="filled">
           <InputLabel htmlFor="filled-adornment-amount">Amount in UST</InputLabel>
           <FilledInput
+            sx={{ fontSize: 24}}
             id="filled-adornment-amount"
             value={amount}
             onChange={handleChangeAmount}
@@ -201,11 +283,13 @@ export function BuyBond() {
           />
         </FormControl>
          </Grid>
-         <Grid item={true} xs={4} ml={5} mt={3}><h3>LUM You can buy: {amount ? parseFloat(amount) / bondPrice : 0}</h3></Grid>
+         <Grid item={true} xs ={2}>
+            <Button variant="outlined" sx={{mt: 3}} onClick={handleMax}>MAX</Button>
+          </Grid>
+         {/* <Grid item={true} xs={4} ml={5} mt={3}><h3>LUM You can buy: {amount ? parseFloat(amount) / bondPrice : 0}</h3></Grid> */}
        </Grid>
        
-        
-        <br />
+
         <br />
         
         
@@ -220,13 +304,27 @@ export function BuyBond() {
         marks={marks}
       /> */}
 
-    {connectedWallet?.availablePost && (
-      <h4>Your UST balance is: {bank? bank.split('u')[0] : 0}</h4>
-    )}
+    {/* {connectedWallet?.availablePost && (
+      <>
+      <Grid container>
+          <Grid item={true} xs={3}>Your UST balance</Grid>
+          <Grid item={true} xs={6}></Grid>
+          <Grid item={true} xs={3}>{bank ? bank : 0}</Grid>
+
+        </Grid>
+        <Grid container>
+            <Grid item={true} xs={3}>LUM you are buying</Grid>
+            <Grid item={true} xs={6}></Grid>
+            <Grid item={true} xs={3}>{amount ? parseFloat(amount) / bondPrice : 0}</Grid>
+
+          </Grid>
+          </>
+      
+    )} */}
 
       {connectedWallet?.availablePost && (
               <Box sx={{ m: 1, position: 'relative' }}>
-              <Button
+              <Button fullWidth
                 variant="contained"
                 disabled={loading}
                 onClick={proceed}

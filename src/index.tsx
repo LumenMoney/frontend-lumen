@@ -1,13 +1,6 @@
 import { getChainOptions, WalletProvider } from '@terra-money/wallet-provider';
 import { Claim } from 'components/Claim';
 import { ClaimAndStake } from 'components/ClaimAndStake';
-import { ConnectSample } from 'components/ConnectSample';
-import { CW20TokensSample } from 'components/CW20TokensSample';
-import { ManualStake } from 'components/ManualStake';
-import { NetworkSample } from 'components/NetworkSample';
-import { QuerySample } from 'components/QuerySample';
-import { SignBytesSample } from 'components/SignBytesSample';
-import { SignSample } from 'components/SignSample';
 import { Test } from 'components/Test';
 import { Unstake } from 'components/Unstake';
 import React from 'react';
@@ -50,65 +43,30 @@ const theme = createTheme({
 function App() {
   return (
     <main
-      style={{ margin: 20, display: 'flex', flexDirection: 'column', gap: 40 }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 40 }}
     >
-      <ThemeProvider theme={theme}>
-        <CssBaseline/>
-        <Router>
+      {/* <ThemeProvider theme={theme}>
+        <CssBaseline/> */}
+        <ButtonAppBar/>
           <Box sx={{ flexGrow: 1 }}>
+            
             <Grid container spacing={2}>
-              <ButtonAppBar/>
+              
               <Grid item={true} xs={3}>
-                <br/>
-              <Button sx={{mt: 3}} variant="outlined" size="large" component={RouterLink} to="/bonds">
-                Bonds
-              </Button>
-              <br/>
-                {/* <div><Link to="/bonds">Bonds</Link></div> */}
-              <Button sx={{mt: 3}} variant="outlined" size="large" component={RouterLink} to="/redeem">
-                Redeem
-              </Button>
-              <br/>
-              <Button sx={{mt: 3}} variant="outlined" size="large" component={RouterLink} to="/stake">
-                Stake
-              </Button>
-              <br/>
-              <Button sx={{mt: 3}} variant="outlined" size="large" component={RouterLink} to="/dashboard">
-                Dashboard
-              </Button>
               </Grid>
               
-                <Grid item={true} xs={9}>
-                {/* <Box
-  display="flex"
-  justifyContent="center"
-
-  minHeight="100vh"
-><Paper> */}
-                    <Switch>
-                      <Route path="/bonds">
-                        <BuyBond></BuyBond>
-                      </Route>
-                      <Route path="/redeem">
-                        <Claim/>
-                        <br />
-                        <ClaimAndStake/>
-                      </Route>
-                      <Route path="/stake">
-                        <Stake/>
-                        <br />
-                        <Unstake/>
-                      </Route>
-                      </Switch>
-                      {/* </Paper>
-                      </Box> */}
+                <Grid item={true} xs={6}>
+                  <Paper sx={{bgcolor: "whitesmoke"}}>
+                  <BasicTabs/>
+                  </Paper>
+                  
                 </Grid>  
+                <Grid item={true} xs={3}></Grid>
               
             </Grid>      
           </Box>
 
-        </Router>
-      </ThemeProvider>
+      {/* </ThemeProvider> */}
 
       
 

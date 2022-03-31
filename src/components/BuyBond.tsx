@@ -92,70 +92,7 @@ export function BuyBond() {
       setAmount(e.target.value)
   };
 
-const  handleMax = useCallback( () => {
-  if(!bank){return}
-  let balance = parseInt(bank);
-  let maxUserCanBuy = balance / bondPrice;
-  if (maxUserCanBuy > maxPayout) {
-    maxUserCanBuy = maxPayout
-  }
-  setAmount((maxUserCanBuy*bondPrice).toString())
-}, [bank, bondPrice, maxPayout])
 
-  //TO BE SEPERATED
-  const getBondPriceUSD = useCallback(async () => {
-    if (!connectedWallet) {
-      return;
-    }
-    
-    let chainID = connectedWallet.network.chainID;
-    console.log(chainID);
-    const result = await terra.wasm.contractQuery(
-      addresses[chainID].BOND_ADDRESS,
-      { "bond_price_in_usd": { } } // query msg
-    );
-    return result
-
-  }, [connectedWallet]);
-
-  const getMaxPayout = useCallback(async () => {
-    if (!connectedWallet) {
-      return;
-    }
-
-    let chainID = connectedWallet.network.chainID;
-    const result = await terra.wasm.contractQuery(
-      addresses[chainID].BOND_ADDRESS,
-      { "max_payout": { 
-        "addr": addresses[chainID].TREASURY_ADDRESS,
-        "max_pay": 50
-      } } // query msg
-    );
-    return result
-
-  }, [connectedWallet]);
-
-  useEffect(() => {
-    getMaxPayout()
-    .then((result: any) => {
-      setMaxPayout(result / Math.pow(10, 9))
-      console.log(result)
-    })
-    .catch((error: any) => {
-      console.log(error)
-    })
-  });
-
-  useEffect(() => {
-    getBondPriceUSD()
-    .then((result: any) => {
-      setBondPrice(result.price / Math.pow(10, 6))
-      console.log(result)
-    })
-    .catch((error: any) => {
-      console.log(error)
-    })
-  });
 
   const proceed = useCallback(() => {
     if (!connectedWallet || !amount) {
@@ -171,15 +108,13 @@ const  handleMax = useCallback( () => {
 
     connectedWallet
       .post({
-        fee: undefined,
+        fee: new Fee(1000000, '200000uusd'),
         msgs: [
           new MsgExecuteContract(
             connectedWallet.walletAddress, 
-            addresses[chainID].BOND_ADDRESS, 
+            addresses[chainID].CONTRACT_ADDRESS, 
             {"deposit": 
               {
-                
-                max_price: 60000
               }
           },
             { uusd: new Int(new Dec(amount).mul(1000000)).toString() },
@@ -192,7 +127,7 @@ const  handleMax = useCallback( () => {
         setLoading(false);
         setSnackMessage("Transaction was a success")
         setState({ open: true, vertical: 'top', horizontal: 'center' });
-        // setTxResult(nextTxResult);
+        setTxResult(nextTxResult);
 
       })
       .catch((error: unknown) => {
@@ -218,26 +153,6 @@ const  handleMax = useCallback( () => {
 
   return (
     <div>
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{fontSize: 16}} >Bond</TableCell>
-              <TableCell sx={{fontSize: 16}} align={"right"}>Saving</TableCell>
-              <TableCell  sx={{fontSize: 16}} align={"right"}>Price</TableCell>
-              <TableCell sx={{fontSize: 16}} align={"right"}>Market Price</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow >
-              <TableCell sx={{fontSize: 24}} >UST</TableCell>
-              <TableCell sx={{fontSize: 24}} align={"right"}>{(100 - (bondPrice * 100 / marketPrice)).toFixed(2)}%</TableCell>
-              <TableCell sx={{fontSize: 24}} align={"right"}> ${bondPrice}</TableCell>
-              <TableCell sx={{fontSize: 24}} align={"right"}> ${marketPrice}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
 <br />
         {/* <Grid container spacing={2}>
           <Grid item={true} xs ={4}> <h2> Bond Price:    ${bondPrice}</h2></Grid>
@@ -257,16 +172,6 @@ const  handleMax = useCallback( () => {
              </CardContent>
             </Card>
           </Grid>
-          <Grid item={true} xs={6}>
-           <Card>
-             <CardContent>
-             <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-                You are buying
-            </Typography>
-               <Typography variant="h5" component="div">{amount ? parseFloat(amount) / bondPrice : 0} LUM</Typography>
-             </CardContent>
-            </Card>
-          </Grid>
        </Grid>    
        
        <br />
@@ -283,9 +188,7 @@ const  handleMax = useCallback( () => {
           />
         </FormControl>
          </Grid>
-         <Grid item={true} xs ={2}>
-            <Button variant="outlined" sx={{mt: 3}} onClick={handleMax}>MAX</Button>
-          </Grid>
+         
          {/* <Grid item={true} xs={4} ml={5} mt={3}><h3>LUM You can buy: {amount ? parseFloat(amount) / bondPrice : 0}</h3></Grid> */}
        </Grid>
        
@@ -329,7 +232,7 @@ const  handleMax = useCallback( () => {
                 disabled={loading}
                 onClick={proceed}
               >
-                Buy Bond
+                Deposit
               </Button>
               {loading && (
                 <CircularProgress
@@ -344,7 +247,7 @@ const  handleMax = useCallback( () => {
 
 
 
-      {/* {txResult && (
+       {txResult && (
         <>
           <pre>{JSON.stringify(txResult, null, 2)}</pre>
 
@@ -360,9 +263,9 @@ const  handleMax = useCallback( () => {
             </div>
           )}
         </>
-      )} */}
+      )} 
 
-      {/* {txError && <pre>{txError}</pre>}
+       {txError && <pre>{txError}</pre>}
 
       {(!!txResult || !!txError) && (
         <button
@@ -373,7 +276,7 @@ const  handleMax = useCallback( () => {
         >
           Clear result
         </button>
-      )} */}
+      )} 
 
       {!connectedWallet && <p>Wallet not connected!</p>}
 

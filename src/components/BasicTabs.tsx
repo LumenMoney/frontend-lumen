@@ -56,33 +56,21 @@ export default function BasicTabs() {
     <Box sx={{ width: '100%' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs centered value={value} onChange={handleChange} aria-label="basic tabs example">
-          <Tab label="Bond" {...a11yProps(0)} />
-          <Tab label="Redeem" {...a11yProps(1)} />
-          <Tab label="Stake" {...a11yProps(2)} />
-          <Tab label="Dashboard" {...a11yProps(3)} />
+          <Tab label="Deposit" {...a11yProps(0)} />
+          <Tab label="Withdraw" {...a11yProps(1)} />
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
         <BuyBond/>
       </TabPanel>
       <TabPanel value={value} index={1}>
-      <ClaimAndStake/>
+      {/* <ClaimAndStake/> */}
  
         <br/>
         <br/>
         <Claim/>       
       </TabPanel>
-      <TabPanel value={value} index={2}>
-        <Stake/>
-        <br/>
-        <br />
-        <br />
-        <Unstake/>
-      </TabPanel>
-      <TabPanel value={value} index={3}>
-       <Test2/>
-       {/* <Dashboard/> */}
-      </TabPanel>
+
     </Box>
   );
 }
